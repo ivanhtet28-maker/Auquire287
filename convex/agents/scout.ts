@@ -68,6 +68,11 @@ export const run = action({
         }
       );
 
+      await ctx.runMutation(api.aiCalls.create, {
+        agentName: "scout", model: "quick_ai_search", purpose: "Market comps search",
+        inputTokens: 500, outputTokens: 600, costUsd: (500 * 3 + 600 * 15) / 1_000_000, durationMs: 0,
+      });
+
       await ctx.runMutation(api.agentRuns.addProgress, {
         id: runId,
         message: "Market comp data received. Analysing...",
@@ -81,6 +86,11 @@ export const run = action({
           search_question: `What are common issues, recalls, and risk factors to check when buying a used ${args.year} ${args.make} ${args.model} in Australia? Include PPSR check items, common mechanical issues, estimated reconditioning costs, and known recalls.`,
         }
       );
+
+      await ctx.runMutation(api.aiCalls.create, {
+        agentName: "scout", model: "quick_ai_search", purpose: "Risk factors search",
+        inputTokens: 400, outputTokens: 500, costUsd: (400 * 3 + 500 * 15) / 1_000_000, durationMs: 0,
+      });
 
       await ctx.runMutation(api.agentRuns.addProgress, {
         id: runId,
