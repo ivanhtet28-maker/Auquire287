@@ -96,6 +96,11 @@ export const run = action({
             }
           );
 
+          await ctx.runMutation(api.aiCalls.create, {
+            agentName: "responder", model: "quick_ai_search", purpose: `Draft reply to ${enquiry.senderName || "enquiry"}`,
+            inputTokens: 600, outputTokens: 800, costUsd: (600 * 3 + 800 * 15) / 1_000_000, durationMs: 0,
+          });
+
           // Parse the AI response into variants
           const fullResponse = draftResult.search_response;
           const sections = fullResponse.split(/(?=variant|option|response\s*[123]|#{1,3}\s*(?:variant|option|response))/i);
