@@ -74,6 +74,11 @@ export const run = action({
         }
       );
 
+      await ctx.runMutation(api.aiCalls.create, {
+        agentName: "briefer", model: "quick_ai_search", purpose: "Morning brief market trends",
+        inputTokens: 400, outputTokens: 600, costUsd: (400 * 3 + 600 * 15) / 1_000_000, durationMs: 0,
+      });
+
       await ctx.runMutation(api.agentRuns.addProgress, {
         id: runId,
         message: "Compiling morning brief...",
