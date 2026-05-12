@@ -1,4 +1,12 @@
-import { MessageSquare, Send } from "lucide-react";
+import { useAction, useMutation, useQuery } from "convex/react";
+import {
+  MessageSquare,
+  Send,
+  Loader2,
+  Play,
+  Copy,
+  Check,
+} from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,12 +19,22 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 
 export function ResponderPage() {
+  const enquiries = useQuery(api.enquiries.list, {});
+  const latestRun = useQuery(api.agentRuns.getLatestByAgent, {
+    agentName: "responder",
+  });
+  const createEnquiry = useMutation(api.enquiries.create);
+  const runResponder = useAction(api.agents.responder.run);
   const [enquiryText, setEnquiryText] = useState("");
+  const [senderName, setSenderName] = useState("");
   const [vehicleRef, setVehicleRef] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleDraftReply = async () => {
     if (!enquiryText) {
@@ -24,18 +42,55 @@ export function ResponderPage() {
       return;
     }
     setIsProcessing(true);
-    toast.info("Responder is drafting replies...");
-    setTimeout(() => {
+    toast.info("Creating enquiry and drafting replies...");
+    try {
+      // Create the enquiry in the DB
+      await createEnquiry({
+        channel: "email",
+        senderName: senderName || undefined,
+        body: enquiryText,
+        subject: vehicleRef || undefined,
+      });
+
+      // Run the responder
+      await runResponder({ trigger: "manual" });
+      toast.success("Drafts ready! Check below.");
+      setEnquiryText("");
+      setSenderName("");
+      setVehicleRef("");
+    } catch (err) {
+      toast.error(
+        `Responder failed: ${err instanceof Error ? err.message : "Unknown error"}`
+      );
+    } finally {
       setIsProcessing(false);
-      toast.success("Drafts ready!");
-    }, 3000);
+    }
   };
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const pendingCount =
+    enquiries?.filter(
+      (e: { status: string }) => e.status === "pending"
+    ).length ?? 0;
+  const draftedCount =
+    enquiries?.filter(
+      (e: { status: string }) => e.status === "drafted"
+    ).length ?? 0;
+  const sentCount =
+    enquiries?.filter((e: { status: string }) => e.status === "sent")
+      .length ?? 0;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <div className="size-10 rounded-xl bg-violet-400/10 flex items-center justify-center">
-          <MessageSquare className="size-5 text-violet-400" />
+        <div className="size-10 rounded-xl bg-violet-50 flex items-center justify-center">
+          <MessageSquare className="size-5 text-violet-600" />
         </div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Responder</h1>
@@ -50,41 +105,82 @@ export function ResponderPage() {
         <Card>
           <CardContent className="pt-4 pb-3">
             <div className="text-xs text-muted-foreground">Pending</div>
-            <div className="text-xl font-bold text-violet-400">0</div>
+            <div className="text-xl font-bold text-violet-600">
+              {pendingCount}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3">
             <div className="text-xs text-muted-foreground">Drafted</div>
-            <div className="text-xl font-bold text-amber-400">0</div>
+            <div className="text-xl font-bold text-amber-600">
+              {draftedCount}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3">
             <div className="text-xs text-muted-foreground">Sent</div>
-            <div className="text-xl font-bold text-emerald-400">0</div>
+            <div className="text-xl font-bold text-emerald-600">
+              {sentCount}
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Progress Stream */}
+      {latestRun?.status === "running" && latestRun.progressMessages && (
+        <Card className="border-violet-200 bg-violet-500/[0.03]">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Loader2 className="size-3.5 animate-spin text-violet-600" />
+              Drafting...
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1 font-mono text-xs text-muted-foreground">
+              {(latestRun.progressMessages as string[]).map(
+                (msg: string, i: number) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <span className="text-violet-600/60">›</span>
+                    {msg}
+                  </div>
+                )
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Manual enquiry input */}
       <Card>
         <CardHeader>
           <CardTitle>Draft a Reply</CardTitle>
           <CardDescription>
-            Paste an inbound enquiry. Responder will generate 3 personalised reply
-            variants, suggest test-drive times, and draft a 24h follow-up.
+            Paste an inbound enquiry. Responder will generate 3 personalised
+            reply variants, suggest test-drive times, and draft a 24h follow-up.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Vehicle Reference (optional)</Label>
-            <Input
-              placeholder="e.g. 2021 Toyota Hilux SR5"
-              value={vehicleRef}
-              onChange={(e) => setVehicleRef(e.target.value)}
-              className="bg-background"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Customer Name (optional)</Label>
+              <Input
+                placeholder="e.g. John Smith"
+                value={senderName}
+                onChange={(e) => setSenderName(e.target.value)}
+                className="bg-background"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Vehicle Reference (optional)</Label>
+              <Input
+                placeholder="e.g. 2021 Toyota Hilux SR5"
+                value={vehicleRef}
+                onChange={(e) => setVehicleRef(e.target.value)}
+                className="bg-background"
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label>Customer Enquiry</Label>
@@ -101,24 +197,205 @@ export function ResponderPage() {
             disabled={isProcessing}
             className="bg-violet-600 hover:bg-violet-700"
           >
-            <Send className="size-4" />
+            {isProcessing ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Play className="size-4" />
+            )}
             Draft Reply
           </Button>
         </CardContent>
       </Card>
 
-      {/* Pending drafts */}
-      <Card>
-        <CardContent className="py-12 text-center">
-          <MessageSquare className="size-10 mx-auto mb-3 text-muted-foreground/30" />
-          <p className="text-sm text-muted-foreground">
-            No pending enquiries. Paste one above or connect your enquiry inbox.
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Auto-replies trigger when you forward emails to your Auquire inbox.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Drafted Enquiries */}
+      {enquiries && enquiries.length > 0 ? (
+        <div className="space-y-4">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+            Enquiries & Drafts
+          </h2>
+          {enquiries.map(
+            (enquiry: {
+              _id: string;
+              _creationTime: number;
+              senderName?: string;
+              body: string;
+              channel: string;
+              status: string;
+              draftPrimary?: string;
+              draftAlt1?: string;
+              draftAlt2?: string;
+              followUpDraft?: string;
+            }) => (
+              <Card key={enquiry._id}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-sm">
+                        {enquiry.senderName || "Unknown sender"}
+                      </CardTitle>
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] capitalize ${
+                          enquiry.status === "drafted"
+                            ? "border-amber-300 text-amber-600"
+                            : enquiry.status === "sent"
+                              ? "border-emerald-300 text-emerald-600"
+                              : "border-violet-300 text-violet-600"
+                        }`}
+                      >
+                        {enquiry.status}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] border-border"
+                      >
+                        {enquiry.channel}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(enquiry._creationTime).toLocaleString("en-AU")}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* Original enquiry */}
+                  <div className="bg-muted rounded-lg p-3">
+                    <div className="text-[10px] text-muted-foreground uppercase mb-1">
+                      Original Enquiry
+                    </div>
+                    <p className="text-sm">{enquiry.body}</p>
+                  </div>
+
+                  {/* Draft variants */}
+                  {enquiry.draftPrimary && (
+                    <div className="space-y-2">
+                      {[
+                        {
+                          label: "Professional",
+                          text: enquiry.draftPrimary,
+                          id: "p",
+                        },
+                        {
+                          label: "Friendly",
+                          text: enquiry.draftAlt1,
+                          id: "a1",
+                        },
+                        {
+                          label: "Direct",
+                          text: enquiry.draftAlt2,
+                          id: "a2",
+                        },
+                      ]
+                        .filter((v) => v.text)
+                        .map((variant) => (
+                          <div
+                            key={variant.id}
+                            className="border border-border rounded-lg p-3"
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-medium text-violet-600 uppercase">
+                                {variant.label}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2"
+                                onClick={() =>
+                                  handleCopy(
+                                    variant.text!,
+                                    `${enquiry._id}-${variant.id}`
+                                  )
+                                }
+                              >
+                                {copiedId ===
+                                `${enquiry._id}-${variant.id}` ? (
+                                  <Check className="size-3 text-emerald-600" />
+                                ) : (
+                                  <Copy className="size-3" />
+                                )}
+                              </Button>
+                            </div>
+                            <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                              {variant.text}
+                            </p>
+                          </div>
+                        ))}
+
+                      {enquiry.followUpDraft && (
+                        <div className="border border-dashed border-border rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-medium text-amber-600 uppercase">
+                              48h Follow-up
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2"
+                              onClick={() =>
+                                handleCopy(
+                                  enquiry.followUpDraft!,
+                                  `${enquiry._id}-fu`
+                                )
+                              }
+                            >
+                              {copiedId === `${enquiry._id}-fu` ? (
+                                <Check className="size-3 text-emerald-600" />
+                              ) : (
+                                <Copy className="size-3" />
+                              )}
+                            </Button>
+                          </div>
+                          <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                            {enquiry.followUpDraft}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Send buttons */}
+                  {enquiry.status === "drafted" && (
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-border"
+                        disabled
+                      >
+                        <Send className="size-3" />
+                        Send via Email (Resend)
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-border"
+                        disabled
+                      >
+                        <MessageSquare className="size-3" />
+                        Send via SMS (Twilio)
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )
+          )}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <MessageSquare className="size-10 mx-auto mb-3 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">
+              No pending enquiries. Paste one above or connect your enquiry
+              inbox.
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Auto-replies trigger when you forward emails to your Auquire
+              inbox.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
