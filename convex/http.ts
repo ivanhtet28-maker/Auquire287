@@ -109,4 +109,62 @@ http.route({
   }),
 });
 
+// ─── Gmail OAuth Callback ───────────────────────────────────────────────
+http.route({
+  path: "/auth/gmail/callback",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const code = url.searchParams.get("code");
+
+    if (!code) {
+      return new Response("Missing authorization code", { status: 400 });
+    }
+
+    // In production, exchange code for tokens via Google OAuth2
+    // For now, store a placeholder to indicate connection
+    await ctx.runMutation(api.dealershipSettings.saveOAuth, {
+      gmailAccessToken: `gmail_${code.slice(0, 20)}`,
+      gmailRefreshToken: `refresh_${code.slice(0, 20)}`,
+      gmailEmail: "connected@gmail.com",
+      gmailConnectedAt: Date.now(),
+    });
+
+    // Redirect back to settings
+    const origin = url.origin.replace("//dashing-badger-698.convex.cloud", "//preview-auquire-b11406ba.viktor.space");
+    return new Response(null, {
+      status: 302,
+      headers: { Location: `${origin}/settings?tab=integrations&gmail=connected` },
+    });
+  }),
+});
+
+// ─── Facebook OAuth Callback ────────────────────────────────────────────
+http.route({
+  path: "/auth/facebook/callback",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const code = url.searchParams.get("code");
+
+    if (!code) {
+      return new Response("Missing authorization code", { status: 400 });
+    }
+
+    // In production, exchange code for access token via Facebook Graph API
+    await ctx.runMutation(api.dealershipSettings.saveOAuth, {
+      fbAccessToken: `fb_${code.slice(0, 20)}`,
+      fbPageId: "page_placeholder",
+      fbPageName: "Connected Page",
+      fbConnectedAt: Date.now(),
+    });
+
+    const origin = url.origin.replace("//dashing-badger-698.convex.cloud", "//preview-auquire-b11406ba.viktor.space");
+    return new Response(null, {
+      status: 302,
+      headers: { Location: `${origin}/settings?tab=integrations&facebook=connected` },
+    });
+  }),
+});
+
 export default http;
