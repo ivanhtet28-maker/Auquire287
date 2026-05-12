@@ -22,6 +22,7 @@ import {
   ScoutPage,
   SettingsPage,
   SignupPage,
+  OnboardingPage,
 } from "./pages";
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
           </Route>
 
           <Route element={<ProtectedRoute />}>
+            <Route path="/onboarding" element={<OnboardingPage />} />
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/agents/hunter" element={<HunterPage />} />
