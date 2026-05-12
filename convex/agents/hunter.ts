@@ -65,9 +65,110 @@ interface ParsedListing {
   sourceId: string;
   description?: string;
   sellerName?: string;
+  sellerPhone?: string;
+  rego?: string;
+  photos?: string[];
   daysListed?: number;
   isDealerPost: boolean;
   dealerPostReason?: string;
+  isSalvage: boolean;
+  salvageReason?: string;
+  isScam: boolean;
+  scamReason?: string;
+}
+
+// ─── Detection helpers ──────────────────────────────────────────────────
+
+const SALVAGE_KEYWORDS = [
+  "salvage", "wovr", "written off", "write-off", "writeoff", "write off",
+  "repairable write-off", "statutory write-off", "hail damage", "flood damage",
+  "not roadworthy", "unregistered", "parts only", "wrecking",
+  "damaged", "accident damage", "insurance write",
+];
+
+const SCAM_KEYWORDS = [
+  "too good to be true", "deposit required", "send money", "western union",
+  "money order", "gift card", "overseas", "shipping only", "no inspection",
+  "army", "deployed", "won't be available", "email only",
+  "pay before", "sight unseen",
+];
+
+const DEALER_KEYWORDS_EXTENDED = [
+  "dealer", "dealership", "wholesale", "yard", "motors", "auto group",
+  "cars direct", "abn", "lmct", "licensed", "finance available",
+  "trade welcome", "trade-in", "warranty included", "ctp included",
+  "fleet", "ex-fleet", "government sale", "multiple available",
+];
+
+function detectSalvage(text: string): { isSalvage: boolean; reason?: string } {
+  const lower = text.toLowerCase();
+  for (const kw of SALVAGE_KEYWORDS) {
+    if (lower.includes(kw)) {
+      return { isSalvage: true, reason: `Contains "${kw}"` };
+    }
+  }
+  return { isSalvage: false };
+}
+
+function detectScam(text: string, price: number, year: number): { isScam: boolean; reason?: string } {
+  const lower = text.toLowerCase();
+  for (const kw of SCAM_KEYWORDS) {
+    if (lower.includes(kw)) {
+      return { isScam: true, reason: `Contains "${kw}"` };
+    }
+  }
+  // Suspiciously low price for a recent car
+  if (year >= 2020 && price < 5000) {
+    return { isScam: true, reason: `Suspiciously low price ($${price}) for ${year} vehicle` };
+  }
+  return { isScam: false };
+}
+
+function detectDealer(text: string): { isDealer: boolean; reason?: string } {
+  const lower = text.toLowerCase();
+  for (const kw of DEALER_KEYWORDS_EXTENDED) {
+    if (lower.includes(kw)) {
+      return { isDealer: true, reason: `Contains "${kw}"` };
+    }
+  }
+  return { isDealer: false };
+}
+
+function extractPhone(text: string): string | undefined {
+  // Australian mobile: 04xx xxx xxx or +614xx xxx xxx
+  const mobileMatch = text.match(/(?:\+?61|0)4\d{2}[\s.-]?\d{3}[\s.-]?\d{3}/);
+  if (mobileMatch) return mobileMatch[0].replace(/[\s.-]/g, "");
+  // Landline: (0x) xxxx xxxx
+  const landlineMatch = text.match(/\(?0\d\)?\s?\d{4}\s?\d{4}/);
+  if (landlineMatch) return landlineMatch[0].replace(/[\s()-]/g, "");
+  return undefined;
+}
+
+function extractRego(text: string): string | undefined {
+  // Common AU rego formats: ABC123, AB12CD, 1AB2CD, ABC12D
+  const regoMatch = text.match(/\b[A-Z]{2,3}\d{2,4}[A-Z]{0,2}\b/);
+  return regoMatch ? regoMatch[0] : undefined;
+}
+
+function extractPhotoUrls(text: string): string[] {
+  const urls = text.match(/https?:\/\/[^\s)]+\.(?:jpg|jpeg|png|webp|gif)(?:\?[^\s)]*)?/gi);
+  return urls ? [...new Set(urls)].slice(0, 10) : [];
+}
+
+/** Retry wrapper for API calls */
+async function withRetry<T>(fn: () => Promise<T>, retries = 2, delayMs = 2000): Promise<T> {
+  let lastErr: Error | undefined;
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err instanceof Error ? err : new Error(String(err));
+      if (i < retries) {
+        await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
+      }
+    }
+  }
+  throw lastErr!;
 }
 
 /**
@@ -153,6 +254,9 @@ function parseListingsFromResponse(
       ? urlMatch[0].replace(/[^a-zA-Z0-9]/g, "").slice(-20)
       : `${source}-${year}-${make}-${model}-${price}`.toLowerCase().replace(/\s/g, "-");
 
+    const salvageCheck = detectSalvage(line);
+    const scamCheck = detectScam(line, price, year);
+
     const listing: ParsedListing = {
       title,
       year,
@@ -164,8 +268,15 @@ function parseListingsFromResponse(
       state: stateMatch?.[1],
       sourceUrl: urlMatch?.[0] ?? `https://${source === "carsales" ? "www.carsales.com.au" : source === "gumtree" ? "www.gumtree.com.au" : "www.facebook.com/marketplace"}/search/${make.toLowerCase()}-${model.toLowerCase()}`,
       sourceId,
+      sellerPhone: extractPhone(line),
+      rego: extractRego(line),
+      photos: extractPhotoUrls(line),
       isDealerPost,
       dealerPostReason: isDealerPost ? "Dealer keywords detected in listing text" : undefined,
+      isSalvage: salvageCheck.isSalvage,
+      salvageReason: salvageCheck.reason,
+      isScam: scamCheck.isScam,
+      scamReason: scamCheck.reason,
     };
 
     if (isWithinBuyBox(listing, buyBox)) {
@@ -202,7 +313,14 @@ function parseListingsFromResponse(
         state: stateM?.[1],
         sourceUrl: `https://${source === "carsales" ? "www.carsales.com.au" : source === "gumtree" ? "www.gumtree.com.au" : "www.facebook.com/marketplace"}/listing/${year}-${make}-${model}`.toLowerCase(),
         sourceId: `${source}-${year}-${make}-${model}-${price}`,
+        sellerPhone: extractPhone(bullet),
+        rego: extractRego(bullet),
+        photos: extractPhotoUrls(bullet),
         isDealerPost: false,
+        isSalvage: detectSalvage(bullet).isSalvage,
+        salvageReason: detectSalvage(bullet).reason,
+        isScam: detectScam(bullet, price, year).isScam,
+        scamReason: detectScam(bullet, price, year).reason,
       });
     }
   }
@@ -229,7 +347,7 @@ function normaliseListingObj(
     ? url.replace(/[^a-zA-Z0-9]/g, "").slice(-20)
     : `${source}-${year}-${make}-${model}-${price}`.toLowerCase().replace(/\s/g, "-");
 
-  return {
+  const result: ParsedListing = {
     title: String(obj.title ?? `${year} ${make} ${model}`),
     year,
     make,
@@ -246,9 +364,32 @@ function normaliseListingObj(
     sourceUrl: url || `https://www.${source === "facebook" ? "facebook.com/marketplace" : source + ".com.au"}/`,
     sourceId,
     sellerName: obj.sellerName ?? obj.seller ? String(obj.sellerName ?? obj.seller) : undefined,
+    sellerPhone: obj.sellerPhone ?? obj.phone ? String(obj.sellerPhone ?? obj.phone) : undefined,
+    rego: obj.rego ?? obj.registration ? String(obj.rego ?? obj.registration) : undefined,
+    photos: Array.isArray(obj.photos) ? obj.photos.map(String).slice(0, 10) : [],
     isDealerPost: Boolean(obj.isDealerPost ?? obj.isDealer ?? false),
     dealerPostReason: obj.dealerPostReason ? String(obj.dealerPostReason) : undefined,
+    isSalvage: false,
+    isScam: false,
   };
+
+  // Run detection on the raw text representation
+  const rawText = JSON.stringify(obj).toLowerCase();
+  const salvageCheck = detectSalvage(rawText);
+  const scamCheck = detectScam(rawText, result.price, result.year);
+  const dealerCheck = detectDealer(rawText);
+  result.isSalvage = salvageCheck.isSalvage;
+  result.salvageReason = salvageCheck.reason;
+  result.isScam = scamCheck.isScam;
+  result.scamReason = scamCheck.reason;
+  if (dealerCheck.isDealer && !result.isDealerPost) {
+    result.isDealerPost = true;
+    result.dealerPostReason = dealerCheck.reason;
+  }
+  if (!result.sellerPhone) result.sellerPhone = extractPhone(rawText);
+  if (!result.rego) result.rego = extractRego(JSON.stringify(obj));
+
+  return result;
 }
 
 /** Check if a parsed listing falls within buy box criteria */
@@ -371,15 +512,29 @@ export const run = action({
             const bodyStr = buyBox.bodyTypes.length > 0 ? `, body types: ${buyBox.bodyTypes.join(", ")}` : "";
             const transStr = buyBox.transmissions.length > 0 ? `, transmission: ${buyBox.transmissions.join("/")}` : "";
 
-            const searchResult = await callViktorTool<{ search_response: string }>(
+            const searchStart = Date.now();
+            const searchResult = await withRetry(() => callViktorTool<{ search_response: string }>(
               "quick_ai_search",
               {
-                search_question: `Search ${source === "carsales" ? "carsales.com.au" : source === "gumtree" ? "gumtree.com.au" : "Facebook Marketplace Australia"} for: ${makeModelStr}, year ${buyBox.yearMin}-${buyBox.yearMax}, price $${buyBox.priceMin.toLocaleString()}-$${buyBox.priceMax.toLocaleString()}, under ${buyBox.kmMax.toLocaleString()}km, in ${stateStr}${bodyStr}${transStr}. List EVERY individual listing you can find with: year, make, model, variant, price, kilometres, location (suburb + state), and listing URL. Focus on PRIVATE sellers only. For each listing include whether it appears to be a dealer post. Format each listing on its own line with all details.`,
+                search_question: `Search ${source === "carsales" ? "carsales.com.au" : source === "gumtree" ? "gumtree.com.au" : "Facebook Marketplace Australia"} for: ${makeModelStr}, year ${buyBox.yearMin}-${buyBox.yearMax}, price $${buyBox.priceMin.toLocaleString()}-$${buyBox.priceMax.toLocaleString()}, under ${buyBox.kmMax.toLocaleString()}km, in ${stateStr}${bodyStr}${transStr}. List EVERY individual listing you can find with: year, make, model, variant, price, kilometres, location (suburb + state), listing URL, seller phone number, rego/registration if shown, and photo URLs. Focus on PRIVATE sellers only. Flag any salvage/WOVR/written-off vehicles. For each listing include whether it appears to be a dealer post. Format each listing on its own line with all details.`,
               }
-            );
+            ), 2, 3000);
+            const searchDurationMs = Date.now() - searchStart;
 
             totalInputTokens += 600;
             totalOutputTokens += 1800;
+
+            // Log AI call
+            await ctx.runMutation(api.aiCalls.create, {
+              agentRunId: runId,
+              agentName: "hunter",
+              model: "quick_ai_search",
+              purpose: `Scan ${source} for ${buyBox.name}`,
+              inputTokens: 600,
+              outputTokens: 1800,
+              costUsd: (600 * 3 + 1800 * 15) / 1_000_000,
+              durationMs: searchDurationMs,
+            });
 
             // Parse the response into structured listings
             const parsedListings = parseListingsFromResponse(
@@ -397,10 +552,31 @@ export const run = action({
             });
 
             // Save each listing to the DB
+            let salvageSkipped = 0;
+            let scamSkipped = 0;
             for (const parsed of parsedListings) {
               try {
                 if (parsed.isDealerPost) {
                   totalDealerPosts++;
+                }
+
+                // Skip salvage/WOVR vehicles
+                if (parsed.isSalvage) {
+                  salvageSkipped++;
+                  await ctx.runMutation(api.agentRuns.addProgress, {
+                    id: runId,
+                    message: `⚠️ Skipped salvage/WOVR: ${parsed.title} — ${parsed.salvageReason}`,
+                  });
+                  continue;
+                }
+
+                // Flag scams but still save (marked)
+                if (parsed.isScam) {
+                  scamSkipped++;
+                  await ctx.runMutation(api.agentRuns.addProgress, {
+                    id: runId,
+                    message: `🚩 Potential scam flagged: ${parsed.title} — ${parsed.scamReason}`,
+                  });
                 }
 
                 const score = quickDealScore(parsed, buyBox);
@@ -423,10 +599,11 @@ export const run = action({
                   suburb: parsed.suburb,
                   state: parsed.state,
                   daysListed: parsed.daysListed,
-                  photos: [],
-                  description: parsed.description,
+                  photos: parsed.photos ?? [],
+                  description: parsed.description ? `${parsed.description}${parsed.isScam ? ` [⚠️ SCAM FLAG: ${parsed.scamReason}]` : ""}` : undefined,
                   sellerName: parsed.sellerName,
-                  rego: undefined,
+                  sellerPhone: parsed.sellerPhone,
+                  rego: parsed.rego,
                 });
 
                 // Set initial deal score
