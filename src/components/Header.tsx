@@ -12,7 +12,7 @@ export function Header() {
     location.pathname === "/login" || location.pathname === "/signup";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#0A0E1A]/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-border bg-white/80 backdrop-blur-md">
       <div className="container">
         <div className="flex h-16 items-center justify-between">
           <Link
