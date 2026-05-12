@@ -54,6 +54,44 @@ export const saveIntegrations = mutation({
   },
 });
 
+export const saveOAuth = mutation({
+  args: {
+    gmailAccessToken: v.optional(v.string()),
+    gmailRefreshToken: v.optional(v.string()),
+    gmailEmail: v.optional(v.string()),
+    gmailConnectedAt: v.optional(v.number()),
+    fbAccessToken: v.optional(v.string()),
+    fbPageId: v.optional(v.string()),
+    fbPageName: v.optional(v.string()),
+    fbConnectedAt: v.optional(v.number()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const existing = await ctx.db.query("dealershipSettings").first();
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+    } else {
+      await ctx.db.insert("dealershipSettings", args);
+    }
+    return null;
+  },
+});
+
+export const completeOnboarding = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const existing = await ctx.db.query("dealershipSettings").first();
+    const data = { onboardingCompleted: true, onboardingCompletedAt: Date.now() };
+    if (existing) {
+      await ctx.db.patch(existing._id, data);
+    } else {
+      await ctx.db.insert("dealershipSettings", data);
+    }
+    return null;
+  },
+});
+
 export const saveSchedules = mutation({
   args: {
     hunterScheduleEnabled: v.optional(v.boolean()),
