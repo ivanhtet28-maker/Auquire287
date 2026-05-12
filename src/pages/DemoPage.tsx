@@ -61,15 +61,15 @@ export function DemoPage() {
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-24">
         <div className="max-w-md text-center">
-          <div className="size-16 rounded-full bg-emerald-400/10 flex items-center justify-center mx-auto mb-6">
-            <Check className="size-8 text-emerald-400" />
+          <div className="size-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-6">
+            <Check className="size-8 text-emerald-600" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Demo request received!</h1>
           <p className="text-muted-foreground mb-6">
             Thanks {form.name}! We'll be in touch within 24 hours to schedule your
             personalised demo. Check your email for a confirmation.
           </p>
-          <Button variant="outline" className="border-white/10" asChild>
+          <Button variant="outline" className="border-border" asChild>
             <Link to="/">
               <ArrowLeft className="size-4" />
               Back to Home
@@ -84,7 +84,7 @@ export function DemoPage() {
     <div className="flex-1 flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-500/20 bg-blue-500/5 text-xs font-medium text-blue-400 mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-200 bg-blue-500/5 text-xs font-medium text-blue-600 mb-4">
             <Calendar className="size-3" />
             15-minute personalised demo
           </div>
