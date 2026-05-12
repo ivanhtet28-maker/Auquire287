@@ -19,19 +19,25 @@ export const create = mutation({
     direction: v.union(v.literal("inbound"), v.literal("outbound")),
     channel: v.union(v.literal("sms"), v.literal("email")),
     body: v.string(),
-    status: v.union(
+    status: v.optional(v.union(
       v.literal("draft"),
       v.literal("approved"),
       v.literal("sent"),
       v.literal("delivered"),
       v.literal("failed"),
-    ),
+    )),
+    externalId: v.optional(v.string()),
   },
   returns: v.id("messages"),
   handler: async (ctx, args) => {
     const id = await ctx.db.insert("messages", {
-      ...args,
+      conversationId: args.conversationId,
+      direction: args.direction,
+      channel: args.channel,
+      body: args.body,
+      status: args.status ?? (args.direction === "inbound" ? "delivered" : "draft"),
       sentAt: Date.now(),
+      externalId: args.externalId,
     });
 
     // Update conversation lastMessageAt
