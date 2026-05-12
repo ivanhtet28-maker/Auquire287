@@ -95,6 +95,11 @@ export const run = action({
             }
           );
 
+          await ctx.runMutation(api.aiCalls.create, {
+            agentName: "lister", model: "quick_ai_search", purpose: `Market price check: ${listing.title}`,
+            inputTokens: 400, outputTokens: 400, costUsd: (400 * 3 + 400 * 15) / 1_000_000, durationMs: 0,
+          });
+
           // Parse market median from response
           const priceMatches = marketResult.search_response.match(/\$[\d,]+/g) || [];
           const parsedPrices = priceMatches.map((p: string) => parseInt(p.replace(/[$,]/g, ""))).filter((n: number) => !isNaN(n) && n > 1000);
