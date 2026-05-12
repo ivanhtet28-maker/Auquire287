@@ -414,6 +414,66 @@ function IntegrationsTab() {
         </CardContent>
       </Card>
 
+      {/* Gmail OAuth */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Key className="size-4 text-muted-foreground" />
+              <CardTitle className="text-base">Gmail</CardTitle>
+            </div>
+            <Badge variant="outline" className={settings?.gmailConnectedAt ? "border-emerald-300 text-emerald-600" : "border-orange-300 text-orange-600"}>
+              {settings?.gmailConnectedAt ? "Connected" : "Not connected"}
+            </Badge>
+          </div>
+          <CardDescription>Connect your Gmail to auto-pull enquiry emails into Inbox and send replies from your address.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {settings?.gmailEmail ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Check className="size-4 text-emerald-500" />
+              Connected as <strong>{settings.gmailEmail}</strong>
+            </div>
+          ) : (
+            <Button variant="outline" className="border-border" onClick={() => {
+              toast.info("Gmail OAuth would redirect to Google consent screen in production");
+            }}>
+              Connect Gmail Account
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Facebook OAuth */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Key className="size-4 text-muted-foreground" />
+              <CardTitle className="text-base">Facebook Marketplace</CardTitle>
+            </div>
+            <Badge variant="outline" className={settings?.fbConnectedAt ? "border-emerald-300 text-emerald-600" : "border-orange-300 text-orange-600"}>
+              {settings?.fbConnectedAt ? "Connected" : "Not connected"}
+            </Badge>
+          </div>
+          <CardDescription>Connect your Facebook to capture Marketplace leads and post listings automatically.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {settings?.fbPageName ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Check className="size-4 text-emerald-500" />
+              Connected to page <strong>{settings.fbPageName}</strong>
+            </div>
+          ) : (
+            <Button variant="outline" className="border-border" onClick={() => {
+              toast.info("Facebook OAuth would redirect to Meta consent screen in production");
+            }}>
+              Connect Facebook Account
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
