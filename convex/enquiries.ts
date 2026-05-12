@@ -35,18 +35,23 @@ export const getPending = query({
 
 export const create = mutation({
   args: {
-    listingId: v.optional(v.id("listings")),
+    listingId: v.optional(v.any()),
     channel: v.union(v.literal("email"), v.literal("sms"), v.literal("web")),
     senderName: v.optional(v.string()),
     senderEmail: v.optional(v.string()),
     senderPhone: v.optional(v.string()),
     subject: v.optional(v.string()),
     body: v.string(),
+    testDriveSlots: v.optional(v.string()),
   },
   returns: v.id("enquiries"),
   handler: async (ctx, args) => {
+    const { testDriveSlots, listingId: rawListingId, ...rest } = args;
+    const listingId = rawListingId && rawListingId !== "none" ? rawListingId : undefined;
     const id = await ctx.db.insert("enquiries", {
-      ...args,
+      ...rest,
+      listingId,
+      testDriveSlots,
       status: "pending",
       receivedAt: Date.now(),
     });
