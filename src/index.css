@@ -48,17 +48,17 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* Auquire agent identity colours */
-  --color-agent-hunter: #10b981;
-  --color-agent-lister: #f59e0b;
-  --color-agent-responder: #8b5cf6;
-  --color-agent-scout: #06b6d4;
-  --color-agent-briefer: #f43f5e;
-  --color-agent-closer: #ec4899;
+  --color-agent-hunter: #059669;
+  --color-agent-lister: #d97706;
+  --color-agent-responder: #7c3aed;
+  --color-agent-scout: #0891b2;
+  --color-agent-briefer: #e11d48;
+  --color-agent-closer: #db2777;
 }
 
 /* ============================
-   Auquire — Dark-first theme
-   Background #0A0E1A  Cards #141B2D  Accent #3B82F6
+   Auquire — VettX-inspired Light Theme
+   Background #f8fafc  Cards #ffffff  Accent #0284c7
    ============================ */
 
 :root {
@@ -66,55 +66,10 @@
   --sidebar-width-icon: 3rem;
   --radius: 0.625rem;
 
-  /* Force dark by default — light values kept for completeness */
-  --primary: #3b82f6;
+  /* Primary — sky blue (matching landing page) */
+  --primary: #0284c7;
   --primary-foreground: #ffffff;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #ffffff;
-
-  --success: #10b981;
-  --success-foreground: #ffffff;
-  --warning: #f59e0b;
-  --warning-foreground: #1a1a2e;
-  --info: #06b6d4;
-  --info-foreground: #ffffff;
-
-  --chart-1: #10b981;
-  --chart-2: #f59e0b;
-  --chart-3: #06b6d4;
-  --chart-4: #f43f5e;
-  --chart-5: #8b5cf6;
-
-  --background: #0a0e1a;
-  --foreground: #e2e8f0;
-  --card: #141b2d;
-  --card-foreground: #e2e8f0;
-  --popover: #141b2d;
-  --popover-foreground: #e2e8f0;
-  --secondary: #1e2740;
-  --secondary-foreground: #cbd5e1;
-  --muted: #1e2740;
-  --muted-foreground: #64748b;
-  --accent: #1e2740;
-  --accent-foreground: #e2e8f0;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.1);
-  --ring: #3b82f6;
-  --sidebar: #0d1120;
-  --sidebar-foreground: #e2e8f0;
-  --sidebar-accent: #1e2740;
-  --sidebar-accent-foreground: #e2e8f0;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #3b82f6;
-}
-
-/* Light mode override (when user toggles) */
-.light {
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --sidebar-primary: #2563eb;
+  --sidebar-primary: #0284c7;
   --sidebar-primary-foreground: #ffffff;
 
   --success: #059669;
@@ -130,6 +85,7 @@
   --chart-4: #e11d48;
   --chart-5: #7c3aed;
 
+  /* Light surfaces */
   --background: #f8fafc;
   --foreground: #0f172a;
   --card: #ffffff;
@@ -146,21 +102,23 @@
   --destructive-foreground: #ffffff;
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #2563eb;
+  --ring: #0284c7;
+
+  /* Sidebar — clean white with subtle border */
   --sidebar: #ffffff;
   --sidebar-foreground: #0f172a;
-  --sidebar-accent: #f1f5f9;
-  --sidebar-accent-foreground: #0f172a;
+  --sidebar-accent: #f0f9ff;
+  --sidebar-accent-foreground: #0284c7;
   --sidebar-border: #e2e8f0;
-  --sidebar-ring: #2563eb;
+  --sidebar-ring: #0284c7;
 }
 
-/* Dark class (same as root since dark-first) */
+/* Dark mode override (toggle via settings) */
 .dark {
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #ffffff;
+  --primary: #38bdf8;
+  --primary-foreground: #0c4a6e;
+  --sidebar-primary: #38bdf8;
+  --sidebar-primary-foreground: #0c4a6e;
 
   --success: #10b981;
   --success-foreground: #ffffff;
@@ -191,13 +149,13 @@
   --destructive-foreground: #ffffff;
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.1);
-  --ring: #3b82f6;
+  --ring: #38bdf8;
   --sidebar: #0d1120;
   --sidebar-foreground: #e2e8f0;
   --sidebar-accent: #1e2740;
   --sidebar-accent-foreground: #e2e8f0;
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #3b82f6;
+  --sidebar-ring: #38bdf8;
 }
 
 @layer base {
