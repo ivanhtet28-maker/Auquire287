@@ -50,15 +50,15 @@ export function FoundingDealerPage() {
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-24">
         <div className="max-w-md text-center">
-          <div className="size-16 rounded-full bg-emerald-400/10 flex items-center justify-center mx-auto mb-6">
-            <Check className="size-8 text-emerald-400" />
+          <div className="size-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-6">
+            <Check className="size-8 text-emerald-600" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Application received!</h1>
           <p className="text-muted-foreground mb-6">
             Thanks {form.name}! We'll review your application and be in touch
             within 24 hours. Founding dealer spots are filling fast.
           </p>
-          <Button variant="outline" className="border-white/10" asChild>
+          <Button variant="outline" className="border-border" asChild>
             <Link to="/">
               <ArrowLeft className="size-4" />
               Back to Home
@@ -73,7 +73,7 @@ export function FoundingDealerPage() {
     <div className="flex-1 flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-xl">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-500/20 bg-amber-500/5 text-xs font-medium text-amber-400 mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-500/20 bg-amber-500/5 text-xs font-medium text-amber-600 mb-4">
             <Rocket className="size-3" />
             Only 7 spots remaining
           </div>
@@ -89,11 +89,11 @@ export function FoundingDealerPage() {
         {/* Benefits */}
         <div className="grid grid-cols-3 gap-3 mb-8">
           {[
-            { icon: Shield, label: "Price locked for life", color: "text-blue-400", bg: "bg-blue-400/10" },
-            { icon: Star, label: "All future modules", color: "text-amber-400", bg: "bg-amber-400/10" },
-            { icon: Zap, label: "Direct founder access", color: "text-emerald-400", bg: "bg-emerald-400/10" },
+            { icon: Shield, label: "Price locked for life", color: "text-blue-600", bg: "bg-blue-50" },
+            { icon: Star, label: "All future modules", color: "text-amber-600", bg: "bg-amber-50" },
+            { icon: Zap, label: "Direct founder access", color: "text-emerald-600", bg: "bg-emerald-50" },
           ].map((b) => (
-            <div key={b.label} className="text-center p-3 rounded-xl border border-white/[0.06] bg-card">
+            <div key={b.label} className="text-center p-3 rounded-xl border border-border bg-card">
               <div className={`size-8 rounded-lg ${b.bg} flex items-center justify-center mx-auto mb-2`}>
                 <b.icon className={`size-4 ${b.color}`} />
               </div>
