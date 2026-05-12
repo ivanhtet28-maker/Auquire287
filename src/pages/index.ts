@@ -13,3 +13,4 @@ export { InboxPage } from "./InboxPage";
 export { ChatPage } from "./ChatPage";
 export { DemoPage } from "./DemoPage";
 export { FoundingDealerPage } from "./FoundingDealerPage";
+export { default as OnboardingPage } from "./OnboardingPage";
