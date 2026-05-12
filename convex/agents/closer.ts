@@ -79,6 +79,11 @@ export const run = action({
         }
       );
 
+      await ctx.runMutation(api.aiCalls.create, {
+        agentName: "closer", model: "quick_ai_search", purpose: `Draft outreach for ${listing.title}`,
+        inputTokens: 500, outputTokens: 700, costUsd: (500 * 3 + 700 * 15) / 1_000_000, durationMs: 0,
+      });
+
       await ctx.runMutation(api.agentRuns.addProgress, {
         id: runId,
         message: "Messages drafted. Creating conversation...",
