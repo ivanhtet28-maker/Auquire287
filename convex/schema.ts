@@ -227,6 +227,7 @@ const schema = defineSchema({
     draftSubject: v.optional(v.string()),
     followUpDraft: v.optional(v.string()),
     testDriveTimes: v.optional(v.array(v.string())),
+    testDriveSlots: v.optional(v.string()),
   })
     .index("by_status", ["status"])
     .index("by_dealership", ["dealershipId"])
@@ -338,6 +339,45 @@ const schema = defineSchema({
     agentCalls: v.optional(v.array(v.any())),
     tokenCount: v.optional(v.number()),
   }).index("by_session", ["sessionId"]),
+
+  // ─── AI Calls Log ──────────────────────────────────────────────────────
+  aiCalls: defineTable({
+    agentRunId: v.optional(v.id("agentRuns")),
+    agentName: v.string(),
+    model: v.string(),
+    purpose: v.string(),
+    inputTokens: v.number(),
+    outputTokens: v.number(),
+    costUsd: v.number(),
+    durationMs: v.number(),
+    metadata: v.optional(v.any()),
+  })
+    .index("by_agentRun", ["agentRunId"])
+    .index("by_agentName", ["agentName"]),
+
+  // ─── Dealership Settings (singleton per dealership) ───────────────────
+  dealershipSettings: defineTable({
+    dealershipName: v.optional(v.string()),
+    tradingName: v.optional(v.string()),
+    contactEmail: v.optional(v.string()),
+    contactPhone: v.optional(v.string()),
+    abn: v.optional(v.string()),
+    suburb: v.optional(v.string()),
+    state: v.optional(v.string()),
+    postcode: v.optional(v.string()),
+    carsalesDealerUrl: v.optional(v.string()),
+    // Integration keys (encrypted in production)
+    twilioAccountSid: v.optional(v.string()),
+    twilioAuthToken: v.optional(v.string()),
+    twilioPhoneNumber: v.optional(v.string()),
+    resendApiKey: v.optional(v.string()),
+    resendFromEmail: v.optional(v.string()),
+    // Agent schedule toggles
+    hunterScheduleEnabled: v.optional(v.boolean()),
+    brieferScheduleEnabled: v.optional(v.boolean()),
+    listerScheduleEnabled: v.optional(v.boolean()),
+    closerFollowUpEnabled: v.optional(v.boolean()),
+  }),
 
   // ─── Platform Settings ────────────────────────────────────────────────
   platformSettings: defineTable({
