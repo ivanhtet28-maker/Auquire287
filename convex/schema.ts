@@ -372,6 +372,18 @@ const schema = defineSchema({
     twilioPhoneNumber: v.optional(v.string()),
     resendApiKey: v.optional(v.string()),
     resendFromEmail: v.optional(v.string()),
+    // OAuth tokens
+    gmailAccessToken: v.optional(v.string()),
+    gmailRefreshToken: v.optional(v.string()),
+    gmailEmail: v.optional(v.string()),
+    gmailConnectedAt: v.optional(v.number()),
+    fbAccessToken: v.optional(v.string()),
+    fbPageId: v.optional(v.string()),
+    fbPageName: v.optional(v.string()),
+    fbConnectedAt: v.optional(v.number()),
+    // Onboarding
+    onboardingCompleted: v.optional(v.boolean()),
+    onboardingCompletedAt: v.optional(v.number()),
     // Agent schedule toggles
     hunterScheduleEnabled: v.optional(v.boolean()),
     brieferScheduleEnabled: v.optional(v.boolean()),
