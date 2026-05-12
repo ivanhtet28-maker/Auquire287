@@ -31,12 +31,12 @@ function DealScoreBadge({ score }: { score?: number }) {
   if (score === undefined) return null;
   const color =
     score >= 8
-      ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+      ? "bg-emerald-100 text-emerald-600 border-emerald-300"
       : score >= 6
-        ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
+        ? "bg-blue-100 text-blue-600 border-blue-300"
         : score >= 4
-          ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
-          : "bg-red-500/20 text-red-400 border-red-500/30";
+          ? "bg-amber-100 text-amber-600 border-amber-300"
+          : "bg-red-100 text-red-600 border-red-300";
   return (
     <Badge variant="outline" className={`${color} text-xs font-bold`}>
       {score}/10
@@ -75,8 +75,8 @@ export function HunterPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-emerald-400/10 flex items-center justify-center">
-            <Crosshair className="size-5 text-emerald-400" />
+          <div className="size-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+            <Crosshair className="size-5 text-emerald-600" />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Hunter</h1>
@@ -87,7 +87,7 @@ export function HunterPage() {
         </div>
         <div className="flex items-center gap-2">
           {latestRun?.status === "running" && (
-            <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+            <Badge variant="outline" className="bg-blue-100 text-blue-600 border-blue-300">
               <Loader2 className="size-3 mr-1 animate-spin" />
               Running
             </Badge>
@@ -110,11 +110,11 @@ export function HunterPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
-          { label: "Total Found", value: stats?.total ?? 0, color: "text-emerald-400" },
-          { label: "New", value: stats?.newCount ?? 0, color: "text-blue-400" },
-          { label: "Contacted", value: stats?.contactedCount ?? 0, color: "text-violet-400" },
-          { label: "Negotiating", value: stats?.negotiatingCount ?? 0, color: "text-amber-400" },
-          { label: "Avg Score", value: stats?.avgDealScore ?? "—", color: "text-cyan-400" },
+          { label: "Total Found", value: stats?.total ?? 0, color: "text-emerald-600" },
+          { label: "New", value: stats?.newCount ?? 0, color: "text-blue-600" },
+          { label: "Contacted", value: stats?.contactedCount ?? 0, color: "text-violet-600" },
+          { label: "Negotiating", value: stats?.negotiatingCount ?? 0, color: "text-amber-600" },
+          { label: "Avg Score", value: stats?.avgDealScore ?? "—", color: "text-cyan-600" },
         ].map((stat) => (
           <Card key={stat.label}>
             <CardContent className="pt-4 pb-3">
@@ -127,10 +127,10 @@ export function HunterPage() {
 
       {/* Progress Stream */}
       {latestRun?.status === "running" && latestRun.progressMessages && (
-        <Card className="border-blue-500/20 bg-blue-500/[0.03]">
+        <Card className="border-blue-200 bg-blue-500/[0.03]">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Loader2 className="size-3.5 animate-spin text-blue-400" />
+              <Loader2 className="size-3.5 animate-spin text-blue-600" />
               Live Progress
             </CardTitle>
           </CardHeader>
@@ -138,7 +138,7 @@ export function HunterPage() {
             <div className="space-y-1 font-mono text-xs text-muted-foreground">
               {(latestRun.progressMessages as string[]).map((msg: string, i: number) => (
                 <div key={i} className="flex items-start gap-2">
-                  <span className="text-blue-400/60">›</span>
+                  <span className="text-blue-600/60">›</span>
                   {msg}
                 </div>
               ))}
@@ -155,7 +155,7 @@ export function HunterPage() {
               <CardTitle className="text-base">Buy Boxes</CardTitle>
               <CardDescription>Define what vehicles to look for</CardDescription>
             </div>
-            <Button variant="outline" size="sm" className="border-white/10 hover:bg-white/5" asChild>
+            <Button variant="outline" size="sm" className="border-border hover:bg-accent" asChild>
               <a href="/settings">
                 <Filter className="size-3.5" />
                 Edit Buy Boxes
@@ -170,9 +170,9 @@ export function HunterPage() {
                 <Badge
                   key={box._id}
                   variant="outline"
-                  className={`${box.isActive ? "border-emerald-500/30 text-emerald-400" : "border-white/10 text-muted-foreground"}`}
+                  className={`${box.isActive ? "border-emerald-300 text-emerald-600" : "border-border text-muted-foreground"}`}
                 >
-                  {box.isActive && <span className="mr-1 size-1.5 rounded-full bg-emerald-400 inline-block" />}
+                  {box.isActive && <span className="mr-1 size-1.5 rounded-full bg-emerald-500 inline-block" />}
                   {box.name} — {box.makes.join(", ")}
                 </Badge>
               ))}
@@ -188,7 +188,7 @@ export function HunterPage() {
       {/* Filters */}
       <div className="flex items-center gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[160px] bg-card border-white/10">
+          <SelectTrigger className="w-[160px] bg-card border-border">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -213,7 +213,7 @@ export function HunterPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/[0.06]">
+                  <tr className="border-b border-border">
                     <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Vehicle</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Price</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden md:table-cell">KM</th>
@@ -224,7 +224,7 @@ export function HunterPage() {
                     <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.04]">
+                <tbody className="divide-y divide-border">
                   {filteredListings.map((listing: {
                     _id: string;
                     title: string;
@@ -240,7 +240,7 @@ export function HunterPage() {
                     status: string;
                     sourceUrl: string;
                   }) => (
-                    <tr key={listing._id} className="hover:bg-white/[0.02] transition-colors">
+                    <tr key={listing._id} className="hover:bg-accent transition-colors">
                       <td className="px-4 py-3">
                         <div className="font-medium">{listing.year} {listing.make} {listing.model}</div>
                         <div className="text-xs text-muted-foreground truncate max-w-[200px]">
@@ -262,7 +262,7 @@ export function HunterPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant="outline" className="text-[10px] border-white/10 capitalize">
+                        <Badge variant="outline" className="text-[10px] border-border capitalize">
                           {listing.source}
                         </Badge>
                       </td>
@@ -274,10 +274,10 @@ export function HunterPage() {
                           variant="outline"
                           className={`text-[10px] capitalize ${
                             listing.status === "new"
-                              ? "border-blue-500/30 text-blue-400"
+                              ? "border-blue-300 text-blue-600"
                               : listing.status === "contacted"
-                                ? "border-violet-500/30 text-violet-400"
-                                : "border-white/10"
+                                ? "border-violet-300 text-violet-600"
+                                : "border-border"
                           }`}
                         >
                           {listing.status}
@@ -300,7 +300,7 @@ export function HunterPage() {
             </div>
           ) : (
             <div className="p-12 text-center">
-              <Crosshair className="size-10 mx-auto mb-3 text-muted-foreground/30" />
+              <Crosshair className="size-10 mx-auto mb-3 text-muted-foreground/40" />
               <p className="text-sm text-muted-foreground mb-4">
                 No listings found yet. Run Hunter to scan the marketplaces.
               </p>
