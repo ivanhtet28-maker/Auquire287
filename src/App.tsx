@@ -27,7 +27,7 @@ import {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="dark" switchable>
+      <ThemeProvider defaultTheme="light" switchable>
         <Toaster />
         <Routes>
           {/* Landing page has its own nav — no PublicLayout wrapper */}
