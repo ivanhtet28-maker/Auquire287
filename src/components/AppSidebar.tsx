@@ -49,12 +49,12 @@ const mainNav = [
 ];
 
 const agentNav = [
-  { href: "/agents/hunter", label: "Hunter", icon: Crosshair, color: "text-emerald-400" },
-  { href: "/agents/lister", label: "Lister", icon: BarChart3, color: "text-amber-400" },
-  { href: "/agents/responder", label: "Responder", icon: MessageSquare, color: "text-violet-400" },
-  { href: "/agents/scout", label: "Scout", icon: Search, color: "text-cyan-400" },
-  { href: "/agents/briefer", label: "Briefer", icon: FileText, color: "text-rose-400" },
-  { href: "/agents/closer", label: "Closer", icon: Send, color: "text-pink-400" },
+  { href: "/agents/hunter", label: "Hunter", icon: Crosshair, color: "text-emerald-600" },
+  { href: "/agents/lister", label: "Lister", icon: BarChart3, color: "text-amber-600" },
+  { href: "/agents/responder", label: "Responder", icon: MessageSquare, color: "text-violet-600" },
+  { href: "/agents/scout", label: "Scout", icon: Search, color: "text-cyan-600" },
+  { href: "/agents/briefer", label: "Briefer", icon: FileText, color: "text-rose-600" },
+  { href: "/agents/closer", label: "Closer", icon: Send, color: "text-pink-600" },
 ];
 
 function NavLink({
